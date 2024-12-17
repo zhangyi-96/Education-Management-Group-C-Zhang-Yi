@@ -1,0 +1,13 @@
+﻿1. Go to https://www.core-econ.org/doing-economics/book/text/01-01.html.
+2. Read the Introduction and follow https://www.core-econ.org/doing-economics/book/text/01-06.html
+3. Follow the Python walkthroughs, copy the code and run it yourself. Use Jupyter NoЕebooks in VS Code or Google Collab
+4. Answer the questions in the project. Use markdown to write them in your jupyter file.  
+
+
+1. 访问 https://www.core-econ.org/doing-economics/book/text/01-01.html。
+
+2. 阅读简介并按照 https://www.core-econ.org/doing-economics/book/text/01-06.html 操作
+
+3. 按照 Python 演示操作，复制代码并自行运行。使用 VS Code 或 Google Collab 中的 Jupyter NoЕebooks
+
+4. 回答项目中的问题。使用 markdown 将它们写入 jupyter 文件中。

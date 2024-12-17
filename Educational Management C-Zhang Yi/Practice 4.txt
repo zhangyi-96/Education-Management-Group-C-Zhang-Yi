@@ -1,0 +1,22 @@
+IMDb and Douban top-250 movie datasets:
+- Compare average ratings between platforms
+- Find overlap - movies that appear in both lists
+- Analyze release year distributions
+- Compare genre distributions
+- Identify directors with most appearances
+
+Make appropriate visualizations for each section. You can use any tools.
+
+IMDb 和豆瓣前 250 部电影数据集：
+
+- 比较平台间的平均评分
+- 查找重叠部分 
+- 出现在两个列表中的电影
+
+- 分析上映年份分布
+
+- 比较类型分布
+
+- 确定出场次数最多的导演
+
+为每个部分制作适当的可视化。您可以使用任何工具。

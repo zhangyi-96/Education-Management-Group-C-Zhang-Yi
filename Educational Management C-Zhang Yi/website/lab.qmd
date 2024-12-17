@@ -1,0 +1,672 @@
+---
+title: "实验室"
+---
+
+# 练习1
+## 演练1.1
+
+```python
+import pandas as pd
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+import numpy as np
+from pathlib import Path
+import pingouin as pg
+from lets_plot import *
+
+LetsPlot.setup_html(no_js=True)
+
+## You don't need to use these settings yourself,
+## they are just here to make the charts look nicer!
+# Set the plot style for prettier charts:
+plt.style.use(
+    "https://raw.githubusercontent.com/aeturrell/core_python/main/plot_style.txt"
+)
+df = pd.read_csv(
+    "https://data.giss.nasa.gov/gistemp/tabledata_v4/NH.Ts+dSST.csv",
+    skiprows=1,
+    na_values="***",
+)
+df.head()
+df.info()
+```
+温度异常是指相对于某个参考时期的平均温度的偏离情况。它是一种衡量当前温度与长期平均温度差值的方式，重点在于体现温度的变化情况，而不是实际的温度数值。温度异常有助于突出长期的温度变化趋势。对于研究气候变化这样的长期过程，关注温度相对于历史平均值的变化更有意义。它可以过滤掉一些短期的、局部的温度波动，让研究人员更准确地把握地球气候系统是在变暖还是变冷这样的宏观趋势。
+
+## 演练1.2
+```python
+df = df.set_index("Year")
+df.head()
+df.tail()
+fig, ax = plt.subplots()
+ax.plot(df.index, df["Jan"])
+ax.set_ylabel("y label")
+ax.set_xlabel("x label")
+ax.set_title("title")
+plt.show()
+month = "Jan"
+fig, ax = plt.subplots()
+ax.axhline(0, color="orange")
+ax.annotate("1951—1980 average", xy=(0.66, -0.2), xycoords=("figure fraction", "data"))
+df[month].plot(ax=ax)
+ax.set_title(
+    f"Average temperature anomaly in {month} \n in the northern hemisphere (1880—{df.index.max()})"
+)
+ax.set_ylabel("Annual temperature anomalies");
+```
+问题 2 至 4 (a)中的图表对温度和时间之间的关系可以发现，在1880年到1930年之间，每年一月份的气温相比于1951-1980年平均气温要低，后续的关系呈正相关关系，即随着时间的增长气温也随之增长。
+
+## 演练1.3
+```python
+month = "J-D"
+fig, ax = plt.subplots()
+ax.axhline(0, color="orange")
+ax.annotate("1951—1980 average", xy=(0.68, -0.2), xycoords=("figure fraction", "data"))
+df[month].plot(ax=ax)
+ax.set_title(
+    f"Average annual temperature anomaly in \n in the northern hemisphere (1880—{df.index.max()})"
+)
+ax.set_ylabel("Annual temperature anomalies");
+
+```
+
+## 演练1.4
+```python
+df["Period"] = pd.cut(
+    df.index,
+    bins=[1921, 1950, 1980, 2010],
+    labels=["1921—1950", "1951—1980", "1981—2010"],
+    ordered=True,
+)
+df["Period"].tail(20)
+list_of_months = ["Jun", "Jul", "Aug"]
+df[list_of_months].stack().head()
+fig, axes = plt.subplots(ncols=3, figsize=(9, 4), sharex=True, sharey=True)
+for ax, period in zip(axes, df["Period"].dropna().unique()):
+    df.loc[df["Period"] == period, list_of_months].stack().hist(ax=ax)
+    ax.set_title(period)
+plt.suptitle("Histogram of temperature anomalies")
+axes[1].set_xlabel("Summer temperature distribution")
+plt.tight_layout();
+```
+
+## 演练1.5
+```python
+temp_all_months = df.loc[(df.index >= 1951) & (df.index <= 1980), "Jan":"Dec"]
+temp_all_months = (
+    temp_all_months.stack()
+    .reset_index()
+    .rename(columns={"level_1": "month", 0: "values"})
+)
+temp_all_months
+
+quantiles = [0.3, 0.7]
+list_of_percentiles = np.quantile(temp_all_months["values"], q=quantiles)
+
+print(f"The cold threshold of {quantiles[0]*100}% is {list_of_percentiles[0]}")
+print(f"The hot threshold of {quantiles[1]*100}% is {list_of_percentiles[1]}")
+```
+
+## 演练1.6
+```python
+# Create a variable that has years 1981 to 2010, and months Jan to Dec (inclusive)
+temp_all_months = df.loc[(df.index >= 1981) & (df.index <= 2010), "Jan":"Dec"]
+# Put all the data in stacked format and give the new columns sensible names
+temp_all_months = (
+    temp_all_months.stack()
+    .reset_index()
+    .rename(columns={"level_1": "month", 0: "values"})
+)
+# Take a look at the start of this data data:
+temp_all_months.head()
+entries_less_than_q30 = temp_all_months["values"] < list_of_percentiles[0]
+proportion_under_q30 = entries_less_than_q30.mean()
+print(
+    f"The proportion under {list_of_percentiles[0]} is {proportion_under_q30*100:.2f}%"
+)
+proportion_over_q70 = (temp_all_months["values"] > list_of_percentiles[1]).mean()
+print(f"The proportion over {list_of_percentiles[1]} is {proportion_over_q70*100:.2f}%")
+```
+
+## 演练1.7
+```python
+temp_all_months = (
+    df.loc[:, "DJF":"SON"]
+    .stack()
+    .reset_index()
+    .rename(columns={"level_1": "Season", 0: "Values"})
+)
+temp_all_months["Period"] = pd.cut(
+    temp_all_months["Year"],
+    bins=[1921, 1950, 1980, 2010],
+    labels=["1921—1950", "1951—1980", "1981—2010"],
+    ordered=True,
+)
+# Take a look at a cut of the data using `.iloc`, which provides position
+temp_all_months.iloc[-135:-125]
+grp_mean_var = temp_all_months.groupby(["Season", "Period"])["Values"].agg(
+    [np.mean, np.var]
+)
+grp_mean_var
+min_year = 1880
+(
+    ggplot(temp_all_months, aes(x="Year", y="Values", color="Season"))
+    + geom_abline(slope=0, color="black", size=1)
+    + geom_line(size=1)
+    + labs(
+        title=f"Average annual temperature anomaly in \n in the northern hemisphere ({min_year}—{temp_all_months['Year'].max()})",
+        y="Annual temperature anomalies",
+    )
+    + scale_x_continuous(format="d")
+    + geom_text(
+        x=min_year, y=0.1, label="1951—1980 average", hjust="left", color="black"
+    )
+)
+```
+
+## 演练1.8
+```python
+df_co2 = pd.read_excel("data_co2.xlsx")
+df_co2.head()
+df_co2_june = df_co2.loc[df_co2["Month"] == 6]
+df_co2_june.head()
+df_temp_co2 = pd.merge(df_co2_june, df, on="Year")
+df_temp_co2[["Year", "Jun", "Trend"]].head()
+(
+    ggplot(df_temp_co2, aes(x="Jun", y="Trend"))
+    + geom_point(color="black", size=3)
+    + labs(
+        title="Scatterplot of temperature anomalies vs carbon dioxide emissions",
+        y="Carbon dioxide levels (trend, mole fraction)",
+        x="Temperature anomaly (degrees Celsius)",
+    )
+)
+df_temp_co2[["Jun", "Trend"]].corr(method="pearson")
+(
+    ggplot(df_temp_co2, aes(x="Year", y="Jun"))
+    + geom_line(size=1)
+    + labs(
+        title="June temperature anomalies",
+    )
+    + scale_x_continuous(format="d")
+)
+base_plot = ggplot(df_temp_co2) + scale_x_continuous(format="d")
+plot_p = (
+    base_plot
+    + geom_line(aes(x="Year", y="Jun"), size=1)
+    + labs(title="June temperature anomalies")
+)
+plot_q = (
+    base_plot
+    + geom_line(aes(x="Year", y="Trend"), size=1)
+    + labs(title="Carbon dioxide emissions")
+)
+gggrid([plot_p, plot_q], ncol=2)
+```
+从上述图标可以看出，年份与CO_2的关系呈正相关关系，同时业余气温变化呈正相关关系，而且从它们的变化曲线可以看出均呈指数型增长，因此气温变化异常与二氧化碳有关系。
+
+
+# 练习2
+## 演练2.1
+```python
+import pandas as pd
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+import numpy as np
+from pathlib import Path
+import pingouin as pg
+from lets_plot import *
+
+
+LetsPlot.setup_html(no_js=True)
+
+
+### You don't need to use these settings yourself
+### — they are just here to make the book look nicer!
+# Set the plot style for prettier charts:
+plt.style.use(
+
+    "https://raw.githubusercontent.com/aeturrell/core_python/main/plot_style.txt"
+)
+data = {
+    "Copenhagen": [14.1, 14.1, 13.7, 12.9, 12.3, 11.7, 10.8, 10.6, 9.8, 5.3],
+    "Dniprop": [11.0, 12.6, 12.1, 11.2, 11.3, 10.5, 9.5, 10.3, 9.0, 8.7],
+    "Minsk": [12.8, 12.3, 12.6, 12.3, 11.8, 9.9, 9.9, 8.4, 8.3, 6.9],
+}
+
+
+df = pd.DataFrame.from_dict(data)
+df.head()
+fig, ax = plt.subplots()
+df.plot(ax=ax)
+ax.set_title("Average contributions to the public goods game: Without punishment")
+ax.set_ylabel("Average contribution")
+ax.set_xlabel("Round");
+```
+
+## 演练2.2
+```python
+data_np = pd.read_excel(
+    "data/doing-economics-datafile-working-in-excel-project-2.xlsx",
+    usecols="A:Q",
+    header=1,
+    index_col="Period",
+)
+data_n = data_np.iloc[:10, :].copy()
+data_p = data_np.iloc[14:24, :].copy()
+test_data = {
+    "City A": [14.1, 14.1, 13.7],
+    "City B": [11.0, 12.6, 12.1],
+}
+
+
+# Original dataframe
+test_df = pd.DataFrame.from_dict(test_data)
+# A copy of the dataframe
+test_copy = test_df.copy()
+# A pointer to the dataframe
+test_pointer = test_df
+
+
+test_pointer.iloc[1, 1] = 99
+print("test_df=")
+print(f"{test_df}\n")
+print("test_copy=")
+print(f"{test_copy}\n")
+data_n.info()
+data_n = data_n.astype("double")
+data_p = data_p.astype("double")
+```
+## 演练2.3
+```python
+mean_n_c = data_n.mean(axis=1)
+mean_p_c = data_p.agg(np.mean, axis=1)
+fig, ax = plt.subplots()
+mean_n_c.plot(ax=ax, label="Without punishment")
+mean_p_c.plot(ax=ax, label="With punishment")
+ax.set_title("Average contributions to the public goods game")
+ax.set_ylabel("Average contribution")
+ax.legend();
+```
+
+## 演练2.4
+```python
+partial_names_list = ["F. Kennedy", "Lennon", "Maynard Keynes", "Wayne"]
+["John " + name for name in partial_names_list]
+# Create new dataframe with bars in
+compare_grps = pd.DataFrame(
+    [mean_n_c.loc[[1, 10]], mean_p_c.loc[[1, 10]]],
+    index=["Without punishment", "With punishment"],
+)
+# Rename columns to have 'round' in them
+compare_grps.columns = ["Round " + str(i) for i in compare_grps.columns]
+# Swap the column and index variables around with the transpose function, ready for plotting (.T is transpose)
+compare_grps = compare_grps.T
+# Make a bar chart
+compare_grps.plot.bar(rot=0);
+```
+
+## 演练2.5
+```python
+n_c = data_n.agg(["std", "var", "mean"], 1)
+n_c
+p_c = data_p.agg(["std", "var", "mean"], 1)
+fig, ax = plt.subplots()
+n_c["mean"].plot(ax=ax, label="mean")
+# mean + 2 standard deviations
+(n_c["mean"] + 2 * n_c["std"]).plot(ax=ax, ylim=(0, None), color="red", label="±2 s.d.")
+# mean - 2 standard deviations
+(n_c["mean"] - 2 * n_c["std"]).plot(ax=ax, ylim=(0, None), color="red", label="")
+for i in range(len(data_n.columns)):
+    ax.scatter(x=data_n.index, y=data_n.iloc[:, i], color="k", alpha=0.3)
+ax.legend()
+ax.set_ylabel("Average contribution")
+ax.set_title("Contribution to public goods game without punishment")
+plt.show();
+fig, ax = plt.subplots()
+p_c["mean"].plot(ax=ax, label="mean")
+# mean + 2 sd
+(p_c["mean"] + 2 * p_c["std"]).plot(ax=ax, ylim=(0, None), color="red", label="±2 s.d.")
+# mean - 2 sd
+(p_c["mean"] - 2 * p_c["std"]).plot(ax=ax, ylim=(0, None), color="red", label="")
+for i in range(len(data_p.columns)):
+    ax.scatter(x=data_p.index, y=data_p.iloc[:, i], color="k", alpha=0.3)
+ax.legend()
+ax.set_ylabel("Average contribution")
+ax.set_title("Contribution to public goods game with punishment")
+plt.show();
+```
+
+## 演练2.6
+```python
+data_p.apply(lambda x: x.max() - x.min(), axis=1)
+# A lambda function accepting three inputs, a, b, and c, and calculating the sum of the squares
+test_function = lambda a, b, c: a**2 + b**2 + c**2
+
+
+# Now we apply the function by handing over (in parenthesis) the following inputs: a=3, b=4 and c=5
+test_function(3, 4, 5)
+range_function = lambda x: x.max() - x.min()
+range_p = data_p.apply(range_function, axis=1)
+range_n = data_n.apply(range_function, axis=1)
+fig, ax = plt.subplots()
+range_p.plot(ax=ax, label="With punishment")
+range_n.plot(ax=ax, label="Without punishment")
+ax.set_ylim(0, None)
+ax.legend()
+ax.set_title("Range of contributions to the public goods game")
+plt.show();
+```
+
+## 演练2.7
+```python
+funcs_to_apply = [range_function, "max", "min", "std", "mean"]
+summ_p = data_p.apply(funcs_to_apply, axis=1).rename(columns={"<lambda>": "range"})
+summ_n = data_n.apply(funcs_to_apply, axis=1).rename(columns={"<lambda>": "range"})
+summ_n.loc[[1, 10], :].round(2)
+summ_p.loc[[1, 10], :].round(2)
+```
+
+## 演练2.8
+```python
+pg.ttest(x=data_n.iloc[0, :], y=data_p.iloc[0, :])
+pg.ttest(x=data_n.iloc[0, :], y=data_p.iloc[0, :], paired=True)
+```
+
+# 练习3
+## 演练3.1
+```python
+import matplotlib.pyplot as plt
+import pandas as pd
+import requests
+from bs4 import BeautifulSoup
+import textwrap
+pd.read_csv(
+    "https://vincentarelbundock.github.io/Rdatasets/csv/dplyr/storms.csv", nrows=10
+)
+import requests
+
+url = "https://api.ons.gov.uk/timeseries/JP9Z/dataset/UNEM/data"
+
+# Get the data from the ONS API:
+json_data = requests.get(url).json()
+
+# Prep the data for a quick plot
+title = json_data["description"]["title"]
+df = (
+    pd.DataFrame(pd.json_normalize(json_data["months"]))
+    .assign(
+        date=lambda x: pd.to_datetime(x["date"]),
+        value=lambda x: pd.to_numeric(x["value"]),
+    )
+    .set_index("date")
+)
+
+df["value"].plot(title=title, ylim=(0, df["value"].max() * 1.2), lw=3.0);
+from pandas_datareader import wb
+df = wb.download(
+    indicator="EN.ATM.CO2E.PC",
+    country=["US", "CHN", "IND", "Z4", "Z7"],
+    start=2017,
+    end=2017,
+)
+# remove country as index for ease of plotting with seaborn
+df = df.reset_index()
+# wrap long country names
+df["country"] = df["country"].apply(lambda x: textwrap.fill(x, 10))
+# order based on size
+df = df.sort_values("EN.ATM.CO2E.PC")
+df.head()
+import seaborn as sns
+
+fig, ax = plt.subplots()
+sns.barplot(x="country", y="EN.ATM.CO2E.PC", data=df.reset_index(), ax=ax)
+ax.set_title(r"CO$_2$ (metric tons per capita)", loc="right")
+plt.suptitle("The USA leads the world on per-capita emissions", y=1.01)
+for key, spine in ax.spines.items():
+    spine.set_visible(False)
+ax.set_ylabel("")
+ax.set_xlabel("")
+ax.yaxis.tick_right()
+plt.show()
+import pandasdmx as pdmx
+# Tell pdmx we want OECD data
+oecd = pdmx.Request("OECD")
+# Set out everything about the request in the format specified by the OECD API
+data = oecd.data(
+    resource_id="PDB_LV",
+    key="GBR+FRA+CAN+ITA+DEU+JPN+USA.T_GDPEMP.CPC/all?startTime=2010",
+).to_pandas()
+
+df = pd.DataFrame(data).reset_index()
+df.head()
+url = "http://aeturrell.com/research"
+page = requests.get(url)
+page.text[:300]
+soup = BeautifulSoup(page.text, "html.parser")
+print(soup.prettify()[60000:60500])
+# Get all paragraphs
+all_paras = soup.find_all("p")
+# Just show one of the paras
+all_paras[1]
+all_paras[1].text
+projects = soup.find_all("div", class_="project-content listing-pub-info")
+projects = [x.text.strip() for x in projects]
+projects[:4]
+start, stop = 0, 50
+root_url = "www.codingforeconomists.com/page="
+info_on_pages = [scraper(root_url + str(i)) for i in range(start, stop)]
+df_list = pd.read_html(
+    "https://simple.wikipedia.org/wiki/FIFA_World_Cup", match="Sweden"
+)
+# Retrieve first and only entry from list of dataframes
+df = df_list[0]
+df.head()
+import pdftotext
+from pathlib import Path
+
+# Download the pdf_with_table.pdf file from
+# https://github.com/aeturrell/coding-for-economists/blob/main/data/pdf_with_table.pdf
+# and put it in a subfolder called data before running the next line
+
+# Load the PDF
+with open(Path("data/pdf_with_table.pdf"), "rb") as f:
+    pdf = pdftotext.PDF(f)
+
+# Read all the text into one string; print a chunk of the string
+print("\n\n".join(pdf)[:220])
+import camelot
+# Grab the pdf
+tables = camelot.read_pdf(os.path.join('data', 'pdf_with_table.pdf'))
+import textract
+text = textract.process(Path('path/to/file.extension'))
+```
+
+## 演练3.2
+```python
+from bs4 import BeautifulSoup
+import requests
+import re
+import pandas as pd
+# Downloading imdb top 250 movie's data
+url = 'http://www.imdb.com/chart/top'
+headers = {
+    "user-agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0"
+}
+response = requests.get(url,headers=headers)
+soup = BeautifulSoup(response.text, "html.parser")
+movies = soup.find_all('div',class_="sc-300a8231-0 gTnHyA cli-children")
+ratings = soup.find_all("span",class_="ipc-rating-star--rating")
+list = []
+
+for index in range(0, len(movies)):
+	
+	movie_string = movies[index].find("h3",class_='ipc-title__text').get_text()
+	movie_title = movie_string.split(".")[1]
+	place = movie_string.split(".")[0]
+	year = movies[index].find("span",class_='sc-300a8231-7 eaXxft cli-title-metadata-item').get_text()
+	
+	data = {"place": place,
+			"movie_title": movie_title,
+			"rating": ratings[index].get_text(),
+			"year": year,
+			}
+	list.append(data)
+for movie in list:
+	print(movie['place'], '-', movie['movie_title'], '('+movie['year'] +
+		') -', 'Starring:', movie['rating'])
+#saving the list as dataframe
+#then converting into .csv file
+df = pd.DataFrame(list)
+df.to_csv('imdb_top_250_movies.csv',index=False)
+```
+
+## 演练3.3
+```python
+import requests
+from bs4 import BeautifulSoup
+import csv
+
+# 提取电影名称、描述、评分和评价人数
+movies = []
+headers = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+}
+for page in range(10):
+    # 定义请求的 URL 和 headers
+    url = f"https://movie.douban.com/top250?start={25 * page}&filter="
+    
+    # 发送 GET 请求
+    response = requests.get(url, headers=headers)
+    response.encoding = 'utf-8'  # 设置编码方式
+    html_content = response.text  # 获取网页的 HTML 内容
+    
+    # 使用 Beautiful Soup 解析 HTML
+    soup = BeautifulSoup(html_content, 'html.parser')
+    
+    
+    for item in soup.find_all('div', class_='item'):
+        title = item.find('span', class_='title').get_text()  # 电影名称
+        description = item.find('span', class_='inq')  # 电影描述
+        rating = item.find('span', class_='rating_num').get_text()  # 评分
+        votes = item.find('div', class_='star').find_all('span')[3].get_text()  # 评价人数
+        
+        # 如果没有描述，将其置为空字符串
+        if description:
+            description = description.get_text()
+        else:
+            description = ''
+        
+        movie = {
+            "title": title,
+            "description": description,
+            "rating": rating,
+            "votes": votes.replace('人评价', '').strip()
+        }
+        movies.append(movie)
+    break
+ 
+# 将数据保存到 CSV 文件
+with open('douban_top250.csv', 'w', newline='', encoding='utf-8') as csvfile:
+    fieldnames = ['title', 'description', 'rating', 'votes']
+    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+ 
+    writer.writeheader()  # 写入表头
+    for movie in movies:
+        writer.writerow(movie)  # 写入每一行数据
+ 
+print("数据已成功保存到 douban_top250.csv")
+import pandas as pd
+import matplotlib.pyplot as plt
+plt.rcParams['font.sans-serif'] = ['SimHei']
+
+# 读取CSV数据
+file_path = 'douban_top250.csv'  # 确保路径正确
+data = pd.read_csv(file_path)
+
+# 根据评分展示Top 10电影
+top10_rating = data.nlargest(10, 'rating')  # 取评分最高的前10部电影
+
+plt.figure(figsize=(10, 6))
+plt.barh(top10_rating['title'], top10_rating['rating'], color='skyblue')
+plt.xlabel('Rating')
+plt.title('Top 10 Movies by Rating')
+plt.gca().invert_yaxis()  # 翻转Y轴，使排名靠前的电影显示在顶部
+plt.show()
+# 评分与投票数的散点图
+plt.figure(figsize=(10, 6))
+plt.scatter(data['votes'], data['rating'], alpha=0.7, color='coral')
+plt.title('Relationship between Votes and Rating')
+plt.xlabel('Number of Votes')
+plt.ylabel('Rating')
+plt.grid(True)
+plt.show()
+```
+
+# 练习4
+```python
+import pandas as pd
+import matplotlib.pyplot as plt
+# 读取数据
+douban_file_path = 'douban_top250.csv'
+imdb_file_path = 'imdb_top_250_movies.csv'
+douban_data = pd.read_csv(douban_file_path)
+imdb_data = pd.read_csv(imdb_file_path)
+
+#1. 平台平均评分比较
+douban_avg_rating = douban_data['rating'].mean()
+imdb_avg_rating = imdb_data['rating'].mean()
+
+# 可视化平均评分比较
+platforms = ['Douban', 'IMDb']
+ratings = [douban_avg_rating, imdb_avg_rating]
+
+plt.figure(figsize=(8, 6))
+plt.bar(platforms, ratings, color=['skyblue', 'coral'])
+plt.title('Average Ratings: Douban vs IMDb')
+plt.ylabel('Average Rating')
+plt.show()
+
+# 创建中英文标题映射
+title_mapping = {
+    '肖申克的救赎': 'The Shawshank Redemption',
+    '阿甘正传': 'Forrest Gump',
+    '泰坦尼克号': 'Titanic',
+    '千与千寻': 'Spirited Away',
+    '美丽人生': 'Life Is Beautiful',
+    '这个杀手不太冷': 'Leon: The Professional',
+    '星际穿越': 'Interstellar',
+    '盗梦空间': 'Inception',
+    '辛德勒的名单': "Schindler's List",
+    '无间道': "Infernal Affairs",
+    '三傻大闹宝莱坞': "3 Idiots"
+}
+
+douban_data['mapped_title'] = douban_data['title'].map(title_mapping)
+overlap_movies = pd.merge(douban_data, imdb_data, left_on='mapped_title', right_on='movie_title', how='inner')
+
+print("Movies appearing on both platforms:")
+print(overlap_movies[['title', 'rating_x', 'rating_y', 'year']])
+
+# 上映年份分布 
+plt.figure(figsize=(10, 6))
+plt.hist(imdb_data['year'], bins=20, color='coral', alpha=0.7, edgecolor='black')
+plt.title('Distribution of Movie Release Years (IMDb)')
+plt.xlabel('Year')
+plt.ylabel('Number of Movies')
+plt.grid(axis='y', linestyle='--', alpha=0.7)
+plt.show()
+
+# 4. 类型分布
+if 'genre' in imdb_data.columns:
+    # 拆分类型列并统计分布
+    genre_series = imdb_data['genre'].str.split(',').explode()
+    genre_counts = genre_series.value_counts().head(10)  # 显示Top 10类型
+
+    plt.figure(figsize=(10, 6))
+    genre_counts.plot(kind='bar', color='skyblue', edgecolor='black')
+    plt.title('Top 10 Movie Genres (IMDb)')
+    plt.xlabel('Genre')
+    plt.ylabel('Count')
+    plt.xticks(rotation=45)
+    plt.show()
+```

@@ -1,0 +1,32 @@
+1. Read https://aeturrell.github.io/coding-for-economists/wrkflow-quarto.html#automated-slides-with-quarto.
+2. Finish all exercises.
+3. Read about creating a website https://quarto.org/docs/websites/
+4. You can use this tutorial as well: https://marvinschmitt.com/blog/website-tutorial-quarto/
+5. Create a quarto website which has the following sections:
+- about me (a short page with info about yourself)
+- homework (there should be the homewotrk you did during the semester)
+- labs (this section should include finished practice and lab exercises)
+
+The quarto website is required if you want to get a higher mark than 4 during the exam.
+Website example: 
+Example repository: https://github.com/ameliafoley/AMELIAFOLEY-MADA-portfolio
+
+1. 阅读 https://aeturrell.github.io/coding-for-economists/wrkflow-quarto.html#automated-slides-with-quarto。
+
+2. 完成所有练习。
+
+3. 阅读有关创建网站的信息 https://quarto.org/docs/websites/
+
+4. 您也可以使用本教程：https://marvinschmitt.com/blog/website-tutorial-quarto/
+
+5. 创建一个包含以下部分的 quarto 网站：
+
+- 关于我（包含有关您自己的信息的简短页面）
+
+- 家庭作业（应该有您在学期期间完成的家庭作业）
+
+- 实验室（此部分应包括已完成的练习和实验室练习）
+
+如果您想在考试中获得高于 4 分的分数，则需要 quarto 网站。
+网站示例：
+示例存储库：https://github.com/ameliafoley/AMELIAFOLEY-MADA-portfolio

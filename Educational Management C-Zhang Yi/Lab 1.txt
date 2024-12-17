@@ -1,0 +1,12 @@
+1. Open the folder 'Lab 1'  here https://drive.google.com/drive/folders/1_HNPfYvHRbwD4TdDp5Yl_BsHdbzQfwZP?usp=drive_link
+2. Make copies of the notebooks. You can work in VS Code or directly in Google Collab IDE.
+3. Do all problems in files called 'Exercises'. You can see the end result in Solutions.
+4. Commit your work to your GitHub.
+
+1. 在此处打开文件夹“Lab 1”https://drive.google.com/drive/folders/1_HNPfYvHRbwD4TdDp5Yl_BsHdbzQfwZP?usp=drive_link
+
+2. 复制笔记本。您可以在 VS Code 中或直接在 Google Collab IDE 中工作。
+
+3. 在名为“练习”的文件中完成所有问题。您可以在解决方案中看到最终结果。
+
+4. 将您的工作提交到您的 GitHub。

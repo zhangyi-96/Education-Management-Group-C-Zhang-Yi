@@ -1,0 +1,23 @@
+Instructions:
+
+1. Go to https://www.core-econ.org/doing-economics/book/text/02-06.html#part-22-describing-the-data and reproduce the code on your machine. You should spend arond 20 minutes on this task.
+
+2. Recreate the matplotlib plots using letsplot library. You can use AI. Spend ~20 minutes on this.
+
+3. Go to https://www.w3schools.com/git/default.asp and go through sections Git Home and Git and GitHub.
+
+4. Commit and push the your_analysis.ipynb file you made today to your GitHub repository.
+
+说明：
+
+
+1. 转到 https://www.core-econ.org/doing-economics/book/text/02-06.html#part-22-describing-the-data 并在您的机器上重现代码。您应该花费大约 20 分钟完成此任务。
+
+
+2. 使用 letsplot 库重新创建 matplotlib 图。您可以使用 AI。花大约 20 分钟完成此任务。
+
+
+3. 转到 https://www.w3schools.com/git/default.asp 并浏览 Git Home 和 Git and GitHub 部分。
+
+
+4. 提交并将您今天创建的 your_analysis.ipynb 文件推送到您的 GitHub 存储库。

@@ -1,0 +1,13 @@
+1. Go through https://aeturrell.github.io/coding-for-economists/data-extraction.html - read only web scraping part. Recreate the code on your  machine.
+
+2. Go through https://www.geeksforgeeks.org/scrape-imdb-movie-rating-and-details-using-python/. Recreate the code on your  machine.
+
+3. Scrape data from https://movie.douban.com/top250 and make visualizations. Use https://blog.csdn.net/qq_51749909/article/details/143106786 as an example.
+
+1. 浏览 https://aeturrell.github.io/coding-for-economists/data-extraction.html - 只读网页抓取部分。在您的机器上重新创建代码。
+
+
+2. 浏览 https://www.geeksforgeeks.org/scrape-imdb-movie-rating-and-details-using-python/。在您的机器上重新创建代码。
+
+
+3. 从 https://movie.douban.com/top250 抓取数据并进行可视化。使用 https://blog.csdn.net/qq_51749909/article/details/143106786 作为示例。
